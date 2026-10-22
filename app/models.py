@@ -1,7 +1,7 @@
 """Pydantic models for orders and events."""
 
 import uuid
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from enum import Enum
 
 from pydantic import BaseModel, Field
@@ -53,6 +53,10 @@ class OrderResponse(BaseModel):
     items: list[OrderItem] = Field(..., description="Order items")
     status: str = Field(..., description="Order status")
     created_at: datetime = Field(..., description="Order creation timestamp")
+    settlement_market: str = Field(..., description="MIC of the market the order settles on")
+    expected_settlement_date: date = Field(
+        ..., description="Expected settlement date (T+N business days on the settlement market)"
+    )
 
 
 class OrderCreatedEvent(BaseModel):
@@ -72,3 +76,5 @@ class OrderEventData(BaseModel):
     currency: str
     amount: int
     items: list[OrderItem]
+    settlement_market: str
+    expected_settlement_date: date

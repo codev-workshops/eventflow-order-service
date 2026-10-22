@@ -14,6 +14,7 @@ from app.models import (
     OrderEventData,
     OrderResponse,
 )
+from app.settlement import expected_settlement_date, market_for_currency
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +38,9 @@ async def create_order(request: CreateOrderRequest) -> OrderResponse:
     """
     order_id = str(uuid.uuid4())
     total_amount = sum(item.unit_price * item.quantity for item in request.items)
+    created_at = datetime.now(UTC)
+    market = market_for_currency(request.currency.value)
+    settles_on = expected_settlement_date(created_at.date(), request.currency.value)
 
     order = OrderResponse(
         order_id=order_id,
@@ -45,7 +49,9 @@ async def create_order(request: CreateOrderRequest) -> OrderResponse:
         amount=total_amount,
         items=request.items,
         status="pending",
-        created_at=datetime.now(UTC),
+        created_at=created_at,
+        settlement_market=market,
+        expected_settlement_date=settles_on,
     )
 
     _orders[order_id] = order
@@ -57,6 +63,7 @@ async def create_order(request: CreateOrderRequest) -> OrderResponse:
             "customer_id": request.customer_id,
             "currency": request.currency.value,
             "amount": total_amount,
+            "expected_settlement_date": settles_on.isoformat(),
         },
     )
 
@@ -68,6 +75,8 @@ async def create_order(request: CreateOrderRequest) -> OrderResponse:
             currency=request.currency.value,
             amount=total_amount,
             items=request.items,
+            settlement_market=market,
+            expected_settlement_date=settles_on,
         )
     )
     published = await publish_order_created(event)
