@@ -15,6 +15,7 @@ User → [Order Service] → Azure Service Bus → [Payment Service]
 ## Features
 
 - REST API for order creation and retrieval
+- Expected settlement date per order (T+N business days) via the shared `demo-ledger-service` library
 - Event publishing to Azure Service Bus
 - International currency support (USD, EUR, GBP, JPY, etc.)
 - Health check and readiness endpoints
@@ -28,6 +29,7 @@ User → [Order Service] → Azure Service Bus → [Payment Service]
 - Azure Service Bus SDK
 - OpenTelemetry + Azure Monitor
 - Pydantic v2 for data validation
+- [`demo-ledger-service`](https://github.com/Cognition-Partner-Workshops/demo-ledger-service) (`ledger.settlement`), pinned to a Git tag in `pyproject.toml`
 
 ## Local Development
 
@@ -88,10 +90,32 @@ Published to Azure Service Bus as JSON:
         "quantity": 2,
         "unit_price": 2499
       }
-    ]
+    ],
+    "settlement_market": "XNYS",
+    "expected_settlement_date": "2026-01-16"
   }
 }
 ```
+
+`settlement_market` is chosen from the order currency (USD → XNYS, GBP → XLON,
+EUR → XETR, JPY → XTKS, otherwise XNYS) and `expected_settlement_date` is
+`ledger.settlement.settlement_date(created_at.date(), market)` from
+`demo-ledger-service`: T+N business days, skipping weekends and exchange
+holidays.
+
+## Shared library dependency
+
+`demo-ledger-service` is installed straight from GitHub at a pinned tag (no
+package registry):
+
+```toml
+demo-ledger-service = { git = "https://github.com/Cognition-Partner-Workshops/demo-ledger-service.git", tag = "v0.4.0" }
+```
+
+To pick up a new library release, bump the `tag`, run `poetry lock` (Poetry
+1.7.1, matching CI and the Dockerfile) and commit the updated `poetry.lock`.
+CI fails if `poetry.lock` is out of date with `pyproject.toml`. The Docker
+image installs `git` in the builder stage so Poetry can fetch it.
 
 **Note:** `amount` is always in the smallest currency unit (cents for USD/EUR, yen for JPY). The downstream Payment Service is responsible for interpreting the amount based on the currency's decimal places.
 

@@ -1,0 +1,38 @@
+{
+  "repo_notes": [
+    {
+      "content": "eventflow-order-service is System 1 of the EventFlow demo and a consumer of the shared demo-ledger-service library (same GitHub organisation), pinned to a Git tag in pyproject.toml. It uses ledger.settlement.settlement_date to stamp each accepted order with an expected settlement date. The sibling eventflow-payment-service consumes the same library for fee lines."
+    }
+  ],
+  "pages": [
+    {
+      "title": "Overview",
+      "purpose": "What the Order Service does: accepts orders over REST, computes the total in minor currency units, stamps an expected settlement date, stores orders in memory and publishes OrderCreated events to Azure Service Bus for the Payment Service. Include the architecture diagram from the README.",
+      "page_notes": [{ "content": "" }]
+    },
+    {
+      "title": "Order API and Event Schema",
+      "purpose": "Endpoints in app/routers/orders.py (POST/GET/PATCH /api/orders, /health, /ready), the Pydantic models in app/models.py, and the OrderCreated event payload including settlement_market and expected_settlement_date.",
+      "parent": "Overview",
+      "page_notes": [{ "content": "" }]
+    },
+    {
+      "title": "Settlement via demo-ledger-service",
+      "purpose": "How app/settlement.py maps an order currency to a market (MARKET_BY_CURRENCY) and calls ledger.settlement.settlement_date; how the dependency is pinned (git + tag in pyproject.toml), how to upgrade the pin, why Dockerfile installs git, and where the library's accounting conventions are documented.",
+      "parent": "Overview",
+      "page_notes": [{ "content": "" }]
+    },
+    {
+      "title": "Service Bus Publishing and Configuration",
+      "purpose": "app/events.py publisher, app/config.py settings and environment variables, graceful degradation when Service Bus is not configured.",
+      "parent": "Overview",
+      "page_notes": [{ "content": "" }]
+    },
+    {
+      "title": "Development, Testing and CI/CD",
+      "purpose": "Poetry setup, running locally, pytest and ruff, the GitHub Actions ci.yml (test + docker build) and cd.yml (Azure Container Apps deploy).",
+      "parent": "Overview",
+      "page_notes": [{ "content": "" }]
+    }
+  ]
+}
